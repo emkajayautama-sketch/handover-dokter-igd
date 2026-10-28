@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Hanter Gaid - Elektronik Hardcover Dokter Jaga IGD</title>
+  <meta name="description" content="E-Hanter Gaid - Sistem Elektronik Hardcover Dokter Jaga IGD untuk otomatisasi serah terima shift, tracking triase medis, dan rekap real-time.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons for Medical UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css?v=hospital-white-green-20261028">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="app-logo">
+        <div class="logo-icon"><i class="fa-solid fa-hospital-user"></i></div>
+        <div class="logo-text">
+          <h1>E-Hanter Gaid</h1>
+          <p class="subtitle">Elektronik Hardcover Dokter Jaga IGD</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="shift-indicator-badge" id="currentShiftBanner">
+        <span class="pulse-dot"></span>
+        <span id="shiftBannerText">Shift Pagi (07.00 - 14.00)</span>
+      </div>
+      <div class="live-clock" id="liveClockDisplay">
+        <i class="fa-regular fa-clock"></i> <span id="clockTime">12:00:00</span> <span class="clock-date" id="clockDate">28 Okt 2026</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <a href="https://docs.google.com/spreadsheets/d/1gdqvWMOfRmyBALEymuYrHmu7kWviHXf8CsgGK1EitFA/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="badge-gsheet-header" id="btnHeaderGSheetLink" title="Buka Spreadsheet Database di Google Sheets">
+        <i class="fa-solid fa-table text-emerald"></i>
+        <span>Google Sheet</span>
+        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+      </a>
+      <div class="user-profile-badge">
+        <div class="user-avatar" id="activeUserAvatar"><i class="fa-solid fa-user-doctor"></i></div>
+        <div class="user-details">
+          <select id="activeDoctorSelect" class="doctor-select-top" title="Pilih Dokter Login">
+            <!-- Will be populated dynamically -->
+          </select>
+          <span class="user-role-label"><i class="fa-solid fa-circle-check text-emerald"></i> Dokter Jaga IGD</span>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btnQuickNewHandover" title="Buat Handover Shift Baru">
+        <i class="fa-solid fa-plus"></i> Handover Baru
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="tab-dashboard" id="navDashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard & Triase</span>
+          <span class="badge-counter" id="badgeTotalActive">0</span>
+        </button>
+        <button class="nav-item" data-tab="tab-handover" id="navHandover">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <span>Form Handover Shift</span>
+        </button>
+        <button class="nav-item" data-tab="tab-tracker" id="navTracker">
+          <i class="fa-solid fa-bed-pulse"></i>
+          <span>Live Patient Tracker</span>
+        </button>
+        <button class="nav-item" data-tab="tab-report" id="navReport">
+          <i class="fa-solid fa-file-medical"></i>
+          <span>Rekap & Cetak Operan</span>
+        </button>
+        <button class="nav-item" data-tab="tab-master" id="navMaster">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Master Data & Dokter</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom-info">
+        <div class="info-card-emergency">
+          <div class="info-header">
+            <i class="fa-solid fa-triangle-exclamation text-amber"></i>
+            <span>Protokol IGD</span>
+          </div>
+          <p>Pastikan kondisi kritis, hasil Lab/Rad cito, dan instruksi pending telah diverifikasi dua arah oleh Dokter Penerima.</p>
+        </div>
+        <div class="version-tag">E-Hanter Gaid v1.0 • DB: Google Sheets</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main-content">
+      
+      <!-- TAB 1: DASHBOARD & TRIASE -->
+      <section class="tab-content active" id="tab-dashboard">
+        <!-- Top Statistics Cards -->
+        <div class="dashboard-stats-grid">
+          <div class="stat-card stat-red" id="cardTriageRed">
+            <div class="stat-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="stat-data">
+              <span class="stat-label">Triase Merah (Resusitasi P1)</span>
+              <h2 class="stat-value" id="statTriageRed">0</h2>
+              <span class="stat-sub">Prioritas 1 • Penanganan Segera</span>
+            </div>
+          </div>
+
+          <div class="stat-card stat-yellow" id="cardTriageYellow">
+            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-data">
+              <span class="stat-label">Triase Kuning (Urgensi P2)</span>
+              <h2 class="stat-value" id="statTriageYellow">0</h2>
+              <span class="stat-sub">Prioritas 2 • Butuh Pengawasan Ketat</span>
+            </div>
+          </div>
+
+          <div class="stat-card stat-green" id="cardTriageGreen">
+            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-data">
+              <span class="stat-label">Triase Hijau (Non-Urgent P3)</span>
+              <h2 class="stat-value" id="statTriageGreen">0</h2>
+              <span class="stat-sub">Prioritas 3 • Kondisi Stabil</span>
+            </div>
+          </div>
+
+          <div class="stat-card stat-total" id="cardTotalPatients">
+            <div class="stat-icon"><i class="fa-solid fa-hospital-user"></i></div>
+            <div class="stat-data">
+              <span class="stat-label">Total Pasien Shift Ini</span>
+              <h2 class="stat-value" id="statTotalShift">0</h2>
+              <span class="stat-sub" id="statShiftNameLabel">Shift Aktif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Status Metrics -->
+        <div class="secondary-metrics-bar">
+          <div class="metric-item">
+            <i class="fa-solid fa-hourglass-half text-amber"></i>
+            <span>Instruksi Pending: <strong id="metricPendingCount">0 Pasien</strong></span>
+          </div>
+          <div class="metric-item">
+            <i class="fa-solid fa-file-signature text-blue"></i>
+            <span>Rencana Rawat Inap (SPRI): <strong id="metricSpriCount">0 Pasien</strong></span>
+          </div>
+          <div class="metric-item">
+            <i class="fa-solid fa-user-doctor text-emerald"></i>
+            <span>Konsul DPJP Aktif: <strong id="metricDpjpCount">0 Pasien</strong></span>
+          </div>
+          <div class="metric-item">
+            <i class="fa-solid fa-door-open text-teal"></i>
+            <span>Boleh Pulang: <strong id="metricDischargedCount">0 Pasien</strong></span>
+          </div>
+        </div>
+
+        <!-- Current Active Handover Session Card -->
+        <div class="card current-handover-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-handshake-angle text-emerald"></i>
+              <h3>Sesi Handover Shift Terkini</h3>
+              <span class="badge badge-primary" id="currentSessionIdBadge">HO-20261028-01</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-secondary btn-sm" id="btnRefreshDashboard">
+                <i class="fa-solid fa-arrows-rotate"></i> Segarkan Data
+              </button>
+              <button class="btn btn-primary btn-sm" id="btnGoToHandoverForm">
+                <i class="fa-solid fa-pen-to-square"></i> Kelola Sesi Ini
+              </button>
+            </div>
+          </div>
+
+          <div class="current-session-summary">
+            <div class="summary-col">
+              <span class="text-muted"><i class="fa-regular fa-calendar"></i> Waktu / Shift:</span>
+              <strong id="sessionDateTimeText">28 Okt 2026 • Shift Pagi (07.00 - 14.00)</strong>
+            </div>
+            <div class="summary-col">
+              <span class="text-muted"><i class="fa-solid fa-user-pen"></i> Dokter yang Melaporkan:</span>
+              <strong id="sessionReporterText" class="text-emerald">dr. Dian</strong>
+            </div>
+            <div class="summary-col">
+              <span class="text-muted"><i class="fa-solid fa-user-check"></i> Dokter Penerima Operan:</span>
+              <strong id="sessionReceiverText" class="text-blue">dr. Camelia</strong>
+            </div>
+            <div class="summary-col">
+              <span class="text-muted"><i class="fa-solid fa-shield-halved"></i> Status Penguncian:</span>
+              <span class="badge badge-success" id="sessionLockStatusBadge"><i class="fa-solid fa-lock-open"></i> Aktif / Draft</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Patient Table in Dashboard -->
+        <div class="card dashboard-patients-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-list-check text-teal"></i>
+              <h3>Daftar Pasien Shift Aktif</h3>
+              <span class="badge badge-neutral" id="dashPatientCountBadge">0 Pasien</span>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn btn-outline btn-sm text-rose" onclick="clearAllPatients()" title="Kosongkan seluruh data pasien (set ke 0)"><i class="fa-solid fa-broom"></i> Kosongkan Data (0)</button>
+              <button class="btn btn-outline btn-sm" id="btnAddNewPatientQuick">
+                <i class="fa-solid fa-user-plus"></i> Tambah Pasien
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table" id="dashboardPatientTable">
+              <thead>
+                <tr>
+                  <th>Triase</th>
+                  <th>No. RM</th>
+                  <th>Nama & Usia</th>
+                  <th>Diagnosis Kerja</th>
+                  <th>Konsul DPJP</th>
+                  <th>Kondisi Terakhir (TTV)</th>
+                  <th>Instruksi Pending Terapi</th>
+                  <th>Status Pasien</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="dashPatientTableBody">
+                <!-- Dynamically injected -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: FORM HANDOVER SHIFT (MASTER-DETAIL) -->
+      <section class="tab-content" id="tab-handover">
+        <div class="card handover-form-card">
+          <div class="card-header border-b">
+            <div class="card-title">
+              <i class="fa-solid fa-clipboard-check text-emerald"></i>
+              <div>
+                <h3>Formulir Serah Terima Shift (Handover Master)</h3>
+                <p class="card-desc">Rekam informasi shift induk dan hubungkan dengan daftar pasien terkait secara terintegrasi.</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnResetHandoverForm">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Reset Form
+              </button>
+              <button type="button" class="btn btn-success btn-sm" id="btnSaveHandoverSession">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan Sesi Handover
+              </button>
+            </div>
+          </div>
+
+          <form id="handoverMasterForm" class="p-6">
+            <!-- Master Info (Parent Table Fields) -->
+            <div class="form-section-title">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>1. Header Informasi Shift (Tabel Handover)</span>
+            </div>
+            
+            <div class="form-grid grid-4">
+              <div class="form-group">
+                <label for="inputHandoverId">ID Handover <span class="required">*</span></label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-hashtag"></i>
+                  <input type="text" id="inputHandoverId" class="form-control" readonly required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputHandoverDate">Tanggal Handover <span class="required">*</span></label>
+                <div class="input-with-icon">
+                  <i class="fa-regular fa-calendar"></i>
+                  <input type="date" id="inputHandoverDate" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputHandoverTime">Waktu Operan <span class="required">*</span></label>
+                <div class="input-with-icon">
+                  <i class="fa-regular fa-clock"></i>
+                  <input type="time" id="inputHandoverTime" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="selectHandoverShift">Shift Jaga <span class="required">*</span></label>
+                <select id="selectHandoverShift" class="form-control" required>
+                  <option value="Shift Pagi (07.00 - 14.00)">Shift Pagi (07.00 - 14.00)</option>
+                  <option value="Shift Sore (14.00 - 21.00)">Shift Sore (14.00 - 21.00)</option>
+                  <option value="Shift Malam (21.00 - 07.00)">Shift Malam (21.00 - 07.00)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid grid-2 mt-4">
+              <div class="form-group">
+                <label for="selectDokterPelapor">Dokter yang Melaporkan (Shift Lama) <span class="required">*</span></label>
+                <select id="selectDokterPelapor" class="form-control" required>
+                  <!-- Populated from USER sheet -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="selectDokterPenerima">Dokter Penerima (Shift Baru) <span class="required">*</span></label>
+                <select id="selectDokterPenerima" class="form-control" required>
+                  <!-- Populated from USER sheet -->
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <label for="inputCatatanShift">Catatan Umum / Ringkasan Shift</label>
+              <textarea id="inputCatatanShift" class="form-control" rows="2" placeholder="Catatan logistik, persediaan obat cito, kesiapan bed ICU/HCU, atau insiden khusus selama shift..."></textarea>
+            </div>
+
+            <!-- Detail Patients (Child Table: Pasien IGD) -->
+            <div class="form-section-title mt-8">
+              <div class="section-title-left">
+                <i class="fa-solid fa-users"></i>
+                <span>2. Daftar Pasien Terkait (Child Related List - Pasien IGD)</span>
+                <span class="badge badge-neutral" id="formPatientCountBadge">0 Pasien</span>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="btnModalAddPatient">
+                <i class="fa-solid fa-plus"></i> Tambah Pasien Baru
+              </button>
+            </div>
+
+            <div class="child-patients-container">
+              <div class="table-responsive">
+                <table class="table table-striped" id="formPatientsTable">
+                  <thead>
+                    <tr>
+                      <th>Triase</th>
+                      <th>No. RM</th>
+                      <th>Identitas Pasien</th>
+                      <th>Diagnosis Kerja</th>
+                      <th>Konsul DPJP</th>
+                      <th>Hasil Lab & Radiologi</th>
+                      <th>Kondisi & Pending Terapi</th>
+                      <th>Status & SPRI</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="formPatientsTableBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Verification & Digital Signature Section -->
+            <div class="form-section-title mt-8">
+              <i class="fa-solid fa-signature"></i>
+              <span>3. Verifikasi & Tanda Tangan Digital Dokter Jaga</span>
+            </div>
+
+            <div class="signatures-grid">
+              <!-- Dokter Pelapor Signature Box -->
+              <div class="signature-box">
+                <div class="sig-title">
+                  <span>Tanda Tangan Dokter Pelapor</span>
+                  <strong id="sigLabelReporter" class="text-emerald">dr. Dian</strong>
+                </div>
+                <div class="canvas-wrapper">
+                  <canvas id="canvasReporter" width="360" height="150"></canvas>
+                </div>
+                <div class="sig-actions">
+                  <button type="button" class="btn btn-outline btn-xs" id="btnClearSigReporter">
+                    <i class="fa-solid fa-eraser"></i> Hapus
+                  </button>
+                  <span class="sig-status text-muted" id="statusSigReporter">Belum ditandatangani</span>
+                </div>
+              </div>
+
+              <!-- Dokter Penerima Signature Box -->
+              <div class="signature-box">
+                <div class="sig-title">
+                  <span>Tanda Tangan Dokter Penerima</span>
+                  <strong id="sigLabelReceiver" class="text-blue">dr. Camelia</strong>
+                </div>
+                <div class="canvas-wrapper">
+                  <canvas id="canvasReceiver" width="360" height="150"></canvas>
+                </div>
+                <div class="sig-actions">
+                  <button type="button" class="btn btn-outline btn-xs" id="btnClearSigReceiver">
+                    <i class="fa-solid fa-eraser"></i> Hapus
+                  </button>
+                  <span class="sig-status text-muted" id="statusSigReceiver">Belum ditandatangani</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-footer-actions mt-8">
+              <div class="footer-left text-muted">
+                <i class="fa-solid fa-circle-check text-emerald"></i> Data akan tersimpan secara otomatis dan dapat diekspor langsung ke lembar rekam medis resmi.
+              </div>
+              <div class="footer-right">
+                <button type="button" class="btn btn-secondary" id="btnSyncGSheetFromForm" title="Kirim data sesi handover ini ke Google Sheets">
+                  <i class="fa-solid fa-cloud-arrow-up text-emerald"></i> Kirim ke Google Sheets
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnPreviewPrintFromForm">
+                  <i class="fa-solid fa-print"></i> Pratinjau Cetak
+                </button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitFullHandover">
+                  <i class="fa-solid fa-check-double"></i> Finalisasi & Simpan Handover
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 3: LIVE PATIENT TRACKER -->
+      <section class="tab-content" id="tab-tracker">
+        <!-- Filter and Search Toolbar -->
+        <div class="toolbar-card">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="trackerSearchInput" placeholder="Cari No. RM, Nama Pasien, Diagnosis, atau DPJP..." class="form-control">
+          </div>
+
+          <div class="filters-group">
+            <div class="filter-item">
+              <label><i class="fa-solid fa-filter"></i> Triase:</label>
+              <select id="filterTriage" class="form-control form-control-sm">
+                <option value="ALL">Semua Triase</option>
+                <option value="Merah">🔴 Triase Merah</option>
+                <option value="Kuning">🟡 Triase Kuning</option>
+                <option value="Hijau">🟢 Triase Hijau</option>
+                <option value="Hitam">⚫ Triase Hitam</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label><i class="fa-solid fa-hospital"></i> Status Pasien:</label>
+              <select id="filterStatus" class="form-control form-control-sm">
+                <option value="ALL">Semua Status</option>
+                <option value="Observasi">Observasi IGD</option>
+                <option value="Rawat Inap">Rawat Inap (SPRI)</option>
+                <option value="Boleh Pulang">Boleh Pulang</option>
+                <option value="Rujuk">Rujuk ke RS Lain</option>
+                <option value="Meninggal">Meninggal</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label><i class="fa-solid fa-user-doctor"></i> DPJP:</label>
+              <select id="filterDpjp" class="form-control form-control-sm">
+                <option value="ALL">Semua Dokter Spesialis</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <button class="btn btn-secondary btn-sm" id="btnResetFilters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Tracker Grid / Cards View -->
+        <div class="tracker-header-stats mt-4">
+          <span id="trackerMatchCount">Menampilkan 0 pasien</span>
+          <div class="view-toggle">
+            <button class="btn btn-icon active" id="btnViewCards" title="Tampilan Kartu"><i class="fa-solid fa-table-cells-large"></i></button>
+            <button class="btn btn-icon" id="btnViewTable" title="Tampilan Tabel"><i class="fa-solid fa-table-list"></i></button>
+          </div>
+        </div>
+
+        <div class="patient-cards-grid mt-4" id="trackerCardsGrid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="card mt-4 hidden" id="trackerTableContainer">
+          <div class="table-responsive">
+            <table class="table" id="trackerFullTable">
+              <thead>
+                <tr>
+                  <th>Triase</th>
+                  <th>No. RM</th>
+                  <th>Nama & Usia</th>
+                  <th>Diagnosis</th>
+                  <th>Konsul DPJP</th>
+                  <th>Kondisi Terakhir</th>
+                  <th>Pending Terapi</th>
+                  <th>SPRI</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="trackerTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: REKAP & CETAK OPERAN (REPORT) -->
+      <section class="tab-content" id="tab-report">
+        <div class="report-controls-card no-print">
+          <div class="report-controls-left">
+            <h3><i class="fa-solid fa-file-pdf text-rose"></i> Lembar Cetak Operan Resmi IGD</h3>
+            <p class="text-muted">Format standar lampiran rekam medis serah terima shift jaga dokter IGD.</p>
+          </div>
+          <div class="report-controls-right">
+            <button class="btn btn-secondary" id="btnSyncGSheetFromReport" title="Kirim lembar operan ini ke Google Sheets">
+              <i class="fa-solid fa-cloud-arrow-up text-emerald"></i> Simpan ke Google Sheets
+            </button>
+            <button class="btn btn-secondary" id="btnExportExcel">
+              <i class="fa-solid fa-file-excel text-emerald"></i> Export ke Excel (.xlsx / .csv)
+            </button>
+            <button class="btn btn-secondary" id="btnExportJson">
+              <i class="fa-solid fa-file-code text-blue"></i> Backup Data (JSON)
+            </button>
+            <button class="btn btn-primary" id="btnPrintOfficialReport">
+              <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Printable Document Container -->
+        <div class="official-paper-container" id="printableOfficialPaper">
+          <!-- Hospital Header -->
+          <div class="paper-header">
+            <div class="hospital-brand">
+              <div class="brand-logo-img">
+                <i class="fa-solid fa-hospital"></i>
+              </div>
+              <div class="brand-details">
+                <h2 class="hospital-name">RUMAH SAKIT UMUM DAERAH (RSUD)</h2>
+                <h4 class="dept-name">INSTALASI GAWAT DARURAT (IGD)</h4>
+                <p class="hospital-address">Jl. Kesehatan No. 01 • Telp IGD: (0386) 21118 • Call Center 119</p>
+              </div>
+            </div>
+            <div class="document-badge">
+              <span class="doc-code">FORM-RM-IGD-07</span>
+              <span class="doc-title-badge">LEMBAR SERAH TERIMA JAGA DOKTER</span>
+            </div>
+          </div>
+
+          <div class="paper-divider"></div>
+
+          <!-- Handover Meta Box -->
+          <div class="report-meta-box">
+            <div class="meta-row">
+              <div class="meta-item">
+                <span class="lbl">ID Handover:</span>
+                <strong id="printReportId">HO-20261028-01</strong>
+              </div>
+              <div class="meta-item">
+                <span class="lbl">Tanggal Handover:</span>
+                <strong id="printReportDate">28 Oktober 2026</strong>
+              </div>
+              <div class="meta-item">
+                <span class="lbl">Waktu Serah Terima:</span>
+                <strong id="printReportTime">14.00 WITA</strong>
+              </div>
+              <div class="meta-item">
+                <span class="lbl">Shift Jaga:</span>
+                <strong id="printReportShift">Shift Pagi (07.00 - 14.00)</strong>
+              </div>
+            </div>
+            <div class="meta-row mt-2">
+              <div class="meta-item">
+                <span class="lbl">Dokter Melaporkan (Lama):</span>
+                <strong id="printReportReporter">dr. Dian</strong>
+              </div>
+              <div class="meta-item">
+                <span class="lbl">Dokter Penerima (Baru):</span>
+                <strong id="printReportReceiver">dr. Camelia</strong>
+              </div>
+              <div class="meta-item">
+                <span class="lbl">Total Pasien Shift:</span>
+                <strong id="printReportTotalPatients">0 Pasien</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Triage Matrix in Print -->
+          <div class="print-triage-summary mt-4">
+            <div class="pt-box pt-red">
+              <span>Triase Merah (Resusitasi):</span>
+              <strong id="printStatRed">0</strong>
+            </div>
+            <div class="pt-box pt-yellow">
+              <span>Triase Kuning (Urgensi):</span>
+              <strong id="printStatYellow">0</strong>
+            </div>
+            <div class="pt-box pt-green">
+              <span>Triase Hijau (Non-Urgent):</span>
+              <strong id="printStatGreen">0</strong>
+            </div>
+            <div class="pt-box pt-obs">
+              <span>Observasi:</span>
+              <strong id="printStatObs">0</strong>
+            </div>
+            <div class="pt-box pt-ranap">
+              <span>Rawat Inap:</span>
+              <strong id="printStatRanap">0</strong>
+            </div>
+            <div class="pt-box pt-pulang">
+              <span>Pulang:</span>
+              <strong id="printStatPulang">0</strong>
+            </div>
+          </div>
+
+          <!-- Patients Table in Print -->
+          <div class="print-patients-table-wrapper mt-4">
+            <h4 class="print-section-heading">DAFTAR OPERAN RINCIAN KLINIS PASIEN</h4>
+            <table class="print-table" id="printPatientsTable">
+              <thead>
+                <tr>
+                  <th style="width: 4%;">No</th>
+                  <th style="width: 8%;">Triase</th>
+                  <th style="width: 14%;">Identitas Pasien</th>
+                  <th style="width: 20%;">Diagnosis Kerja</th>
+                  <th style="width: 14%;">Konsul DPJP</th>
+                  <th style="width: 14%;">Hasil Lab & Radiologi</th>
+                  <th style="width: 16%;">Kondisi & Pending Terapi</th>
+                  <th style="width: 10%;">Status / SPRI</th>
+                </tr>
+              </thead>
+              <tbody id="printPatientsTableBody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Signatures on Paper -->
+          <div class="print-signatures-area mt-8">
+            <div class="sig-print-block">
+              <p>Dokter yang Melaporkan (Shift Lama),</p>
+              <div class="sig-img-container" id="printSigReporterContainer">
+                <span class="sig-placeholder text-muted">(Tanda Tangan Digital)</span>
+              </div>
+              <strong class="doctor-name-print" id="printDoctorNameReporter">(dr. Dian)</strong>
+              <span class="doctor-nip">Dokter Jaga IGD</span>
+            </div>
+
+            <div class="sig-print-center">
+              <p class="timestamp-ack" id="printAckTimestamp">Diserahterimakan pada: 28 Okt 2026, 14:00 WITA</p>
+              <div class="stamp-box">LEMBAR RESMI IGD</div>
+            </div>
+
+            <div class="sig-print-block">
+              <p>Dokter yang Menerima (Shift Baru),</p>
+              <div class="sig-img-container" id="printSigReceiverContainer">
+                <span class="sig-placeholder text-muted">(Tanda Tangan Digital)</span>
+              </div>
+              <strong class="doctor-name-print" id="printDoctorNameReceiver">(dr. Camelia)</strong>
+              <span class="doctor-nip">Dokter Jaga IGD</span>
+            </div>
+          </div>
+
+          <div class="paper-footer-note mt-8">
+            <p><em>*Dokumen ini merupakan catatan medis operan resmi internal IGD. Kerahasiaan data pasien dilindungi undang-undang kesehatan.</em></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: MASTER DATA & DOKTER -->
+      <section class="tab-content" id="tab-master">
+        <div class="master-data-grid">
+          <!-- Dokter Jaga IGD Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-user-doctor text-emerald"></i>
+                <h3>Master Dokter Jaga IGD (Tabel USER)</h3>
+              </div>
+              <button class="btn btn-primary btn-xs" id="btnAddDoctorJaga">
+                <i class="fa-solid fa-plus"></i> Tambah Dokter
+              </button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted text-sm mb-4">Daftar dokter jaga umum yang bertugas di shift IGD sesuai data `Handover Dokter.xlsx`.</p>
+              <div class="table-responsive">
+                <table class="table" id="tableMasterDokterJaga">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Dokter</th>
+                      <th>Status Aktif</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="masterDokterJagaBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dokter Spesialis DPJP Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa-solid fa-stethoscope text-blue"></i>
+                <h3>Master Dokter Spesialis DPJP (Tabel USER DPJP)</h3>
+              </div>
+              <button class="btn btn-primary btn-xs" id="btnAddDoctorDpjp">
+                <i class="fa-solid fa-plus"></i> Tambah DPJP
+              </button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted text-sm mb-4">Daftar dokter konsultan spesialis untuk konsultasi pasien emergensi dan rekomendasi rawat inap.</p>
+              <div class="table-responsive">
+                <table class="table" id="tableMasterDpjp">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Dokter Spesialis</th>
+                      <th>Status Aktif</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="masterDpjpBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Sheets Cloud Integration Card -->
+        <div class="card mt-6" id="cardGSheetIntegration">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-table text-emerald"></i>
+              <h3>Integrasi Google Sheets & Cloud Database</h3>
+            </div>
+            <div class="card-actions">
+              <span class="badge badge-success" id="badgeGSheetConnectionStatus">
+                <i class="fa-solid fa-circle-check"></i> Terhubung ke Google Sheets
+              </span>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Banner Link -->
+            <div class="gsheet-card-banner">
+              <div class="gsheet-banner-info">
+                <div class="gsheet-banner-icon">
+                  <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <div class="gsheet-banner-text">
+                  <h4>Database Spreadsheet: E-Hanter Gaid (Google Sheets)</h4>
+                  <p id="labelGSheetStatusDesc">Terkoneksi langsung ke Google Spreadsheet ID: <span class="font-mono text-emerald" id="displaySheetId">1gdqvWMOfRmyBALEymuYrHmu7kWviHXf8CsgGK1EitFA</span></p>
+                </div>
+              </div>
+              <div class="gsheet-banner-actions">
+                <a href="https://docs.google.com/spreadsheets/d/1gdqvWMOfRmyBALEymuYrHmu7kWviHXf8CsgGK1EitFA/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" id="btnOpenSpreadsheetExternal">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Spreadsheet
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" id="btnFetchFromGSheet">
+                  <i class="fa-solid fa-cloud-arrow-down"></i> Tarik Master Dokter & DPJP
+                </button>
+              </div>
+            </div>
+
+            <!-- Configuration inputs -->
+            <div class="gsheet-fields-grid">
+              <div class="form-group">
+                <label for="inputGSheetUrl"><i class="fa-solid fa-link text-emerald"></i> URL Google Spreadsheet</label>
+                <input type="url" id="inputGSheetUrl" class="form-control font-mono" value="https://docs.google.com/spreadsheets/d/1gdqvWMOfRmyBALEymuYrHmu7kWviHXf8CsgGK1EitFA/edit?usp=sharing" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+              </div>
+
+              <div class="form-group">
+                <label for="inputGasWebAppUrl"><i class="fa-solid fa-code text-blue"></i> Web App Apps Script URL (Untuk Dua Arah / Auto Push)</label>
+                <div class="input-with-button">
+                  <input type="url" id="inputGasWebAppUrl" class="form-control font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnOpenGasModal" title="Buka Panduan & Salin Kode Apps Script">
+                    <i class="fa-solid fa-book-open"></i> Panduan Script
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-actions-end">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnTestGSheetConnection">
+                <i class="fa-solid fa-satellite-dish"></i> Uji Koneksi Live
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="btnPushCurrentToGSheet">
+                <i class="fa-solid fa-cloud-arrow-up text-emerald"></i> Kirim Sesi Saat Ini ke Sheets
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnSaveGSheetConfig">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- System & Backup Tools Card -->
+        <div class="card mt-6">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-database text-teal"></i>
+              <h3>Manajemen Sinkronisasi Data & Cadangan</h3>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="sync-tools-grid">
+              <div class="tool-card">
+                <h4><i class="fa-solid fa-rotate text-emerald"></i> Reset ke Data Awal Excel</h4>
+                <p class="text-muted text-sm">Kembalikan daftar dokter dan sampel pasien awal sesuai dengan berkas `Handover Dokter.xlsx`.</p>
+                <button class="btn btn-outline btn-sm mt-2" id="btnResetToExcelDefaults">
+                  Muat Ulang Data Asal Excel
+                </button>
+              </div>
+
+              <div class="tool-card">
+                <h4><i class="fa-solid fa-file-arrow-up text-blue"></i> Pulihkan dari File JSON</h4>
+                <p class="text-muted text-sm">Unggah file backup JSON untuk memulihkan seluruh riwayat handover sebelumnya.</p>
+                <input type="file" id="inputImportJsonFile" accept=".json" class="hidden">
+                <button class="btn btn-secondary btn-sm mt-2" id="btnTriggerImportJson">
+                  Pilih Berkas Cadangan
+                </button>
+              </div>
+
+              <div class="tool-card">
+                <h4><i class="fa-solid fa-trash-can text-rose"></i> Bersihkan Penyimpanan Lokal</h4>
+                <p class="text-muted text-sm">Hapus seluruh data riwayat sesi yang tersimpan di peramban (browser localStorage).</p>
+                <button class="btn btn-danger btn-sm mt-2" id="btnClearStorage">
+                  Hapus Cache Lokal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT PATIENT -->
+  <div class="modal-backdrop" id="modalPatient">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-user-injured text-emerald"></i>
+          <h3 id="modalPatientTitle">Tambah Data Pasien IGD</h3>
+        </div>
+        <button class="btn-close" id="btnClosePatientModal">&times;</button>
+      </div>
+
+      <form id="formPatientInput">
+        <input type="hidden" id="inputPatientId">
+        <div class="modal-body">
+          <!-- Triase & No RM -->
+          <div class="form-grid grid-3">
+            <div class="form-group">
+              <label for="inputPatTriage">Klasifikasi Triase <span class="required">*</span></label>
+              <select id="inputPatTriage" class="form-control triage-select-colored" required>
+                <option value="Merah" class="opt-red">🔴 Merah (Resusitasi - P1)</option>
+                <option value="Kuning" class="opt-yellow" selected>🟡 Kuning (Urgensi - P2)</option>
+                <option value="Hijau" class="opt-green">🟢 Hijau (Non-Urgent - P3)</option>
+                <option value="Hitam" class="opt-black">⚫ Hitam (Meninggal / DOA - P0)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPatRm">No. Rekam Medis (RM) <span class="required">*</span></label>
+              <div class="input-with-button">
+                <input type="text" id="inputPatRm" class="form-control font-mono" placeholder="Contoh: 12-34-56" required>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnGenRm" title="Generate Nomor RM Dummy">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPatAge">Usia Pasien <span class="required">*</span></label>
+              <input type="text" id="inputPatAge" class="form-control" placeholder="Contoh: 45 th / 8 bln" required>
+            </div>
+          </div>
+
+          <!-- Nama Pasien & DPJP -->
+          <div class="form-grid grid-2 mt-4">
+            <div class="form-group">
+              <label for="inputPatName">Nama Lengkap Pasien <span class="required">*</span></label>
+              <input type="text" id="inputPatName" class="form-control" placeholder="Nama pasien..." required>
+            </div>
+
+            <div class="form-group">
+              <label for="selectPatDpjp">Konsul Dokter Spesialis (DPJP)</label>
+              <select id="selectPatDpjp" class="form-control">
+                <option value="-">- Tidak Ada / Belum Konsul -</option>
+                <!-- Populated from USER DPJP -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Diagnosis Kerja -->
+          <div class="form-group mt-4">
+            <label for="inputPatDiagnosis">Diagnosis Kerja IGD <span class="required">*</span></label>
+            <input type="text" id="inputPatDiagnosis" class="form-control" placeholder="Contoh: STEMI Anterior Ekstensif Onset 3 Jam + Syok Kardiogenik" required>
+          </div>
+
+          <!-- Pemeriksaan Penunjang (Lab & Rad) -->
+          <div class="form-grid grid-2 mt-4">
+            <div class="form-group">
+              <label for="inputPatLab"><i class="fa-solid fa-vial-virus text-teal"></i> Pemeriksaan Laboratorium</label>
+              <textarea id="inputPatLab" class="form-control" rows="2" placeholder="Hasil DL, GDS, Elektrolit, Troponin, Ur/Cr, BGA..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPatRad"><i class="fa-solid fa-x-ray text-blue"></i> Pemeriksaan Radiologi</label>
+              <textarea id="inputPatRad" class="form-control" rows="2" placeholder="Foto Thorax, CT-Scan Kepala, USG FAST, EKG..."></textarea>
+            </div>
+          </div>
+
+          <!-- Kondisi Terakhir & Pending Terapi -->
+          <div class="form-grid grid-2 mt-4">
+            <div class="form-group">
+              <label for="inputPatCondition"><i class="fa-solid fa-heart-pulse text-rose"></i> Kondisi Terakhir & TTV <span class="required">*</span></label>
+              <textarea id="inputPatCondition" class="form-control" rows="3" placeholder="TD: 120/80, N: 84x, RR: 20x, S: 36.8C, SpO2: 98%, GCS: E4M6V5, KU terkini..." required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="inputPatPending"><i class="fa-solid fa-triangle-exclamation text-amber"></i> Instruksi Pending & Terapi Berjalan <span class="required">*</span></label>
+              <textarea id="inputPatPending" class="form-control" rows="3" placeholder="Instruksi obat belum masuk, evaluasi Lab cito, advis DPJP yang harus dikawal shift penerima..." required></textarea>
+            </div>
+          </div>
+
+          <!-- SPRI & Status Pasien -->
+          <div class="form-grid grid-2 mt-4">
+            <div class="form-group">
+              <label for="inputPatSpri"><i class="fa-solid fa-file-lines text-indigo"></i> Surat Permintaan Rawat Inap (SPRI)</label>
+              <input type="text" id="inputPatSpri" class="form-control" placeholder="Nomor SPRI atau 'Ada' / 'Tidak Ada' / Ruangan tujuan">
+            </div>
+
+            <div class="form-group">
+              <label for="selectPatStatus">Status Pasien Saat Handover <span class="required">*</span></label>
+              <select id="selectPatStatus" class="form-control" required>
+                <option value="Observasi">Observasi di IGD</option>
+                <option value="Rawat Inap">Rawat Inap (Menunggu Bed)</option>
+                <option value="Boleh Pulang">Boleh Pulang / Rawat Jalan</option>
+                <option value="Rujuk">Rujuk ke RS Lain</option>
+                <option value="Meninggal">Meninggal Dunia</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelPatientModal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSavePatientItem">
+            <i class="fa-solid fa-check"></i> Simpan Data Pasien
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GOOGLE APPS SCRIPT GUIDE -->
+  <div class="modal-backdrop" id="modalGasGuide">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-cloud-arrow-up text-emerald"></i>
+          <h3>Panduan Integrasi Google Apps Script (Auto-Sync Google Sheets)</h3>
+        </div>
+        <button class="btn-close" id="btnCloseGasModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted text-sm">
+          Aplikasi ini dapat membaca data dokter langsung dari Google Sheets. Agar aplikasi juga bisa <strong>mengirim dan menyimpan data sesi handover serta pasien secara otomatis</strong> ke lembar kerja Google Sheets tanpa hambatan login berulang, ikuti 4 langkah mudah berikut:
+        </p>
+
+        <div class="step-guide-list">
+          <div class="step-guide-item">
+            <span class="step-number">1</span>
+            <div>
+              <strong>Buka Apps Script di Google Sheets:</strong><br>
+              Buka spreadsheet Anda di browser, klik menu <code>Ekstensi</code> (Extensions) &rarr; <code>Apps Script</code>.
+            </div>
+          </div>
+          <div class="step-guide-item">
+            <span class="step-number">2</span>
+            <div>
+              <strong>Salin Kode Backend Script:</strong><br>
+              Hapus kode default pada editor, lalu salin seluruh kode dari kotak di bawah ini dan tempelkan. Simpan file (Ctrl+S).
+            </div>
+          </div>
+          <div class="step-guide-item">
+            <span class="step-number">3</span>
+            <div>
+              <strong>Terapkan Sebagai Web App:</strong><br>
+              Klik tombol biru <code>Terapkan</code> (Deploy) di kanan atas &rarr; <code>Penerapan baru</code> (New deployment) &rarr; Pilih tipe <code>Aplikasi Web</code> (Web app).<br>
+              Atur: <em>Jalankan sebagai:</em> <strong>Saya</strong> | <em>Yang memiliki akses:</em> <strong>Siapa saja (Anyone)</strong>.
+            </div>
+          </div>
+          <div class="step-guide-item">
+            <span class="step-number">4</span>
+            <div>
+              <strong>Tempelkan URL Web App:</strong><br>
+              Salin URL yang diberikan (berakhiran <code>/exec</code>), lalu tempelkan ke kolom <em>"Web App Apps Script URL"</em> pada halaman Master Data aplikasi ini dan klik Simpan.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-box-wrapper">
+          <div class="code-box-header">
+            <span><i class="fa-brands fa-google"></i> Google Apps Script (google-apps-script.js / Code.gs)</span>
+            <button class="btn btn-secondary btn-xs" id="btnCopyGasCode">
+              <i class="fa-solid fa-copy"></i> Salin Seluruh Kode
+            </button>
+          </div>
+          <pre class="code-box-content" id="gasCodePre"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCloseGasModalBtn">Tutup</button>
+        <button type="button" class="btn btn-primary" id="btnCopyGasCodeBottom">
+          <i class="fa-solid fa-copy"></i> Salin Kode Script
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Logic -->
+  <script src="app.js?v=clean-zero-20261028"></script>
+</body>
+</html>
