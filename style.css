@@ -136,16 +136,24 @@ body {
 }
 
 .logo-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: #ffffff;
-  border-radius: var(--radius-md);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  color: #059669;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffffff;
+  flex-shrink: 0;
+}
+
+.logo-icon img, .header-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .logo-text h1 {
@@ -1202,15 +1210,24 @@ select.form-control option {
 }
 
 .brand-logo-img {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #059669, #047857);
-  color: #fff;
-  border-radius: 8px;
+  width: 58px;
+  height: 58px;
+  background: #ffffff;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.brand-logo-img img, .official-paper-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .hospital-name {
