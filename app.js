@@ -99,9 +99,20 @@ function loadFromStorage() {
     AppState.patients = savedPatients ? JSON.parse(savedPatients) : [];
   }
 
-  const savedCurrent = localStorage.getItem('HANDOVER_CURRENT_SESSION');
+    const savedCurrent = localStorage.getItem('HANDOVER_CURRENT_SESSION');
   if (savedCurrent) {
     AppState.currentHandover = JSON.parse(savedCurrent);
+    // Normalize shift names to new schedule (08.00-14.00, 14.00-20.00, 20.00-08.00)
+    if (AppState.currentHandover && AppState.currentHandover.shift) {
+      const s = AppState.currentHandover.shift;
+      if (s.includes('07.00') || s.includes('Pagi')) {
+        AppState.currentHandover.shift = 'Shift Pagi (08.00 - 14.00)';
+      } else if (s.includes('21.00') || s.includes('Sore') || s.includes('Siang')) {
+        AppState.currentHandover.shift = 'Shift Siang (14.00 - 20.00)';
+      } else if (s.includes('Malam')) {
+        AppState.currentHandover.shift = 'Shift Malam (20.00 - 08.00)';
+      }
+    }
   } else {
     // Generate default current shift session
     AppState.currentHandover = createDefaultShiftSession();
@@ -151,12 +162,12 @@ function createDefaultShiftSession() {
 }
 
 function getShiftByHour(hours) {
-  if (hours >= 7 && hours < 14) {
-    return { name: 'Shift Pagi (07.00 - 14.00)', code: 'PAGI' };
-  } else if (hours >= 14 && hours < 21) {
-    return { name: 'Shift Sore (14.00 - 21.00)', code: 'SORE' };
+  if (hours >= 8 && hours < 14) {
+    return { name: 'Shift Pagi (08.00 - 14.00)', code: 'PAGI' };
+  } else if (hours >= 14 && hours < 20) {
+    return { name: 'Shift Siang (14.00 - 20.00)', code: 'SIANG' };
   } else {
-    return { name: 'Shift Malam (21.00 - 07.00)', code: 'MALAM' };
+    return { name: 'Shift Malam (20.00 - 08.00)', code: 'MALAM' };
   }
 }
 
