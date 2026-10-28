@@ -1450,13 +1450,14 @@ select.form-control option {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1.5rem;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
 }
 
 .modal-backdrop.show {
@@ -1469,13 +1470,23 @@ select.form-control option {
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 88vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
   animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   color: #0f172a;
+  position: relative;
+  margin: auto;
+}
+
+.modal-dialog form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .modal-lg {
@@ -1493,6 +1504,7 @@ select.form-control option {
 }
 
 .modal-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1520,18 +1532,50 @@ select.form-control option {
   font-size: 1.4rem;
   cursor: pointer;
   line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
 }
 
 .btn-close:hover {
-  color: #0f172a;
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .modal-body {
+  flex: 1;
+  min-height: 0;
   padding: 1.5rem;
-  overflow-y: auto;
+  overflow-y: scroll !important;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #059669 #f1f5f9;
+}
+
+/* Custom Emerald Scrollbar (Jelas dan Mudah Digeser) */
+.modal-body::-webkit-scrollbar {
+  width: 10px;
+  display: block !important;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+  margin: 6px 0;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #059669;
+  border-radius: 8px;
+  border: 2px solid #f1f5f9;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #047857;
 }
 
 .modal-footer {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
